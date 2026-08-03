@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>是 Ray，不是 Array · Vibe Coding 練習頁</title>
+<meta name="description" content="Ray 的 Vibe Coding 練習頁。目前還是空的，東西會慢慢長出來。">
+<meta name="theme-color" content="#F2EFFB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14112B" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FF3D68'/><text x='16' y='24' font-family='Helvetica,sans-serif' font-size='21' font-weight='bold' text-anchor='middle' fill='%231A1633'>R</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root{
+    --paper:#F2EFFB;
+    --ink:#1A1633;
+    --ink-2:#56507A;
+    --pop:#FF3D68;
+    --peri:#5B4BD6;
+    --rule:rgba(26,22,51,.14);
+
+    --display:"Bricolage Grotesque","Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --body:system-ui,-apple-system,"Segoe UI","PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#14112B;
+      --ink:#EFEBFF;
+      --ink-2:#9A93C4;
+      --pop:#FF5C82;
+      --peri:#A99BFF;
+      --rule:rgba(239,235,255,.16);
+    }
+  }
+
+  *,*::before,*::after{ box-sizing:border-box }
+
+  html{ -webkit-text-size-adjust:100% }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:clamp(1rem,.95rem + .3vw,1.1rem);
+    line-height:1.85;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  .stage{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    padding:clamp(1.75rem,5vw,4.5rem);
+  }
+
+  .stage__inner{
+    width:100%;
+    max-width:58rem;
+    margin-inline:auto;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding-block:clamp(2rem,8vh,5rem);
+  }
+
+  /* ── eyebrow ───────────────────────────── */
+  .eyebrow{
+    margin:0 0 clamp(1.5rem,4vh,2.75rem);
+    font-family:var(--mono);
+    font-size:.75rem;
+    font-weight:500;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+  }
+  .eyebrow b{ color:var(--pop); font-weight:500 }
+
+  /* ── wordmark ──────────────────────────── */
+  .wordmark{
+    margin:0;
+    font-family:var(--display);
+    font-weight:800;
+    font-size:clamp(4.5rem,20vw,13rem);
+    line-height:.86;
+    letter-spacing:-.045em;
+    font-variation-settings:"wdth" 100;
+  }
+
+  .shed{ display:none }
+
+  .js .shed{
+    display:inline-block;
+    color:var(--ink-2);
+    animation:shed .55s cubic-bezier(.66,0,.24,1) .8s both;
+  }
+
+  @keyframes shed{
+    from{ opacity:1; margin-right:0; filter:blur(0); transform:none }
+    to{
+      opacity:0;
+      margin-right:var(--shed-pull,-1.3em);
+      filter:blur(6px);
+      transform:translateY(-.1em) scale(.88);
+    }
+  }
+
+  /* ── the punchline ─────────────────────── */
+  .assert{
+    margin:clamp(1.1rem,2.5vh,1.6rem) 0 0;
+    font-family:var(--mono);
+    font-size:clamp(.85rem,.78rem + .5vw,1.05rem);
+    color:var(--peri);
+    letter-spacing:-.01em;
+  }
+  .assert .cmt{ color:var(--ink-2) }
+
+  .lede{
+    margin:clamp(1.75rem,4vh,2.5rem) 0 0;
+    max-width:33em;
+    color:var(--ink-2);
+  }
+  .lede strong{ color:var(--ink); font-weight:700 }
+
+  /* ── the token-shaped call to action ───── */
+  .cta{
+    align-self:flex-start;
+    margin-top:clamp(2rem,5vh,3rem);
+    display:inline-flex;
+    align-items:center;
+    gap:.15em;
+    padding:.7em 1.1em;
+    border-radius:5px;
+    background:var(--pop);
+    color:#1A1633;
+    font-weight:600;
+    font-size:clamp(.95rem,.9rem + .3vw,1.075rem);
+    line-height:1;
+    text-decoration:none;
+    transition:transform .22s cubic-bezier(.3,.8,.3,1), box-shadow .22s;
+  }
+  .cta__b{
+    font-family:var(--mono);
+    opacity:.5;
+    transition:transform .22s cubic-bezier(.3,.8,.3,1);
+  }
+  .cta__label{ padding-inline:.45em }
+  .cta__arrow{ display:inline-block; transition:transform .22s cubic-bezier(.3,.8,.3,1) }
+
+  .cta:hover,.cta:focus-visible{
+    transform:translateY(-2px);
+    box-shadow:0 10px 22px -12px var(--pop);
+  }
+  .cta:hover .cta__b--l,.cta:focus-visible .cta__b--l{ transform:translateX(-.3em) }
+  .cta:hover .cta__b--r,.cta:focus-visible .cta__b--r{ transform:translateX(.3em) }
+  .cta:hover .cta__arrow,.cta:focus-visible .cta__arrow{ transform:translateX(.25em) }
+  .cta:active{ transform:translateY(0) }
+
+  /* ── footnote ──────────────────────────── */
+  .foot{
+    width:100%;
+    max-width:58rem;
+    margin-inline:auto;
+    padding-top:1.5rem;
+    border-top:1px solid var(--rule);
+    font-family:var(--mono);
+    font-size:.8rem;
+    color:var(--ink-2);
+  }
+
+  .foot summary{
+    cursor:pointer;
+    display:inline-block;
+    padding:.15em 0;
+    transition:color .18s;
+  }
+  .foot summary:hover{ color:var(--pop) }
+  .foot summary::marker{ color:var(--peri) }
+
+  .foot pre{
+    margin:1rem 0 .25rem;
+    padding:1.15rem 1.25rem;
+    overflow-x:auto;
+    border-left:2px solid var(--peri);
+    background:color-mix(in srgb,var(--ink) 5%,transparent);
+    font-size:.775rem;
+    line-height:1.75;
+    color:var(--ink-2);
+  }
+
+  /* ── entrance choreography ─────────────── */
+  .rise{ animation:rise .7s cubic-bezier(.2,.8,.25,1) both }
+  .eyebrow{ animation-delay:.05s }
+  .wordmark{ animation-delay:.14s }
+  .assert{ animation-delay:1.12s }
+  .lede{ animation-delay:1.22s }
+  .cta{ animation-delay:1.32s }
+  .foot{ animation-delay:1.46s }
+
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(.7rem) }
+    to{ opacity:1; transform:none }
+  }
+
+  :focus-visible{
+    outline:3px solid var(--peri);
+    outline-offset:4px;
+    border-radius:3px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .js .shed{ display:none }
+    *,*::before,*::after{
+      animation-duration:.01ms !important;
+      animation-delay:0ms !important;
+      transition-duration:.01ms !important;
+    }
+  }
+</style>
+</head>
+
+<body>
+<script>document.documentElement.classList.add('js')</script>
+
+<main class="stage">
+  <div class="stage__inner">
+    <p class="eyebrow rise">2026 鐵人賽 <b>/</b> day 04 <b>/</b> claude playground</p>
+
+    <h1 class="wordmark rise"><span class="shed" aria-hidden="true">AR</span>RAY</h1>
+
+    <p class="assert rise"><code>Array.isArray(ray)</code> <span class="cmt">// false</span></p>
+
+    <p class="lede rise"><strong>是 Ray，不是 Array。</strong>這頁現在還空著，它是我拿來練 Vibe Coding 的沙盒，東西會一件一件長出來。</p>
+
+    <a class="cta rise" href="https://israynotarray.com/" target="_blank" rel="noopener noreferrer">
+      <span class="cta__b cta__b--l" aria-hidden="true">[</span>
+      <span class="cta__label">去我的部落格 <span class="cta__arrow" aria-hidden="true">→</span></span>
+      <span class="cta__b cta__b--r" aria-hidden="true">]</span>
+    </a>
+  </div>
+</main>
+
+<footer class="foot rise">
+  <details>
+    <summary>它本來長這樣（335 bytes）</summary>
+    <pre><code>&lt;!DOCTYPE html&gt;&lt;html lang="zh-Hant"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;我的練習頁（是 Ray 不是 Array）&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Hello，這是我的 Vibe Coding 練習頁&lt;/h1&gt;
+  &lt;p&gt;目前這裡什麼都還沒有。&lt;/p&gt;
+  &lt;a href="https://israynotarray.com/" target="_blank"&gt;是 Ray 不是 Array&lt;/a&gt;
+&lt;/body&gt;&lt;/html&gt;</code></pre>
+  </details>
+</footer>
+
+<script>
+  // 量出 "AR" 的實際寬度，讓它淡出時剛好把 RAY 拉回左邊界（與字型無關）
+  (function () {
+    var shed = document.querySelector('.shed');
+    if (!shed) return;
+    var pull = function () {
+      var w = shed.getBoundingClientRect().width;
+      if (w) document.documentElement.style.setProperty('--shed-pull', -w + 'px');
+    };
+    pull();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(pull);
+  })();
+</script>
+</body>
+</html>
