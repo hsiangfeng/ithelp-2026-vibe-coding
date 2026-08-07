@@ -1,0 +1,17 @@
+<!DOCTYPE html><html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>我的練習頁（是 Ray 不是 Array）</title>
+</head>
+<body>
+  <h1>Hello，這是我的 Vibe Coding 練習頁</h1>
+  <p>目前這裡什麼都還沒有。</p>
+  <a href="https://israynotarray.com/" target="_blank">是 Ray 不是 Array</a>
+  <p><button type="button" id="bgBtn">隨機換背景色</button></p>
+  <script>
+    document.getElementById('bgBtn').addEventListener('click', function () {
+      var hue = Math.floor(Math.random() * 360);
+      document.body.style.backgroundColor = 'hsl(' + hue + ', 70%, 85%)';
+    });
+  </script>
+</body></html>
