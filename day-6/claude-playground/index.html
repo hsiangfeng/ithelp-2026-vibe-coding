@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的練習頁（是 Ray 不是 Array）</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.7;
+      max-width: 40rem;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+    section { margin-top: 2.5rem; }
+    ul { padding-left: 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+    button {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hello，這是我的 Vibe Coding 練習頁</h1>
+  <p>一邊練習、一邊把這頁慢慢長出來。</p>
+
+  <main>
+    <section>
+      <h2>自我介紹</h2>
+      <!-- 改這裡：名字與介紹文字 -->
+      <p>我是 <a href="https://israynotarray.com/" target="_blank" rel="noopener noreferrer">是 Ray 不是 Array</a>，目前主要做前端開發，平常會把踩過的坑寫成筆記。</p>
+      <p>這個頁面是拿來練習的沙盒，想到什麼就往上加，先求會動再求好看。</p>
+    </section>
+
+    <section>
+      <h2>技能清單</h2>
+      <!-- 改這裡：換成自己的技能項目 -->
+      <ul>
+        <li>HTML — 語意化標籤與表單</li>
+        <li>CSS — 排版、Flexbox、Grid</li>
+        <li>JavaScript — DOM 操作與非同步處理</li>
+        <li>Git — 版本控制與協作流程</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>聯絡方式</h2>
+      <ul>
+        <!-- 改這裡：確認 GitHub 帳號是否正確 -->
+        <li>GitHub：<a href="https://github.com/hsiangfeng" target="_blank" rel="noopener noreferrer">github.com/hsiangfeng</a></li>
+        <!-- TODO 改這裡：把 your_account 換成實際的 Threads 帳號 -->
+        <li>Threads：<a href="https://www.threads.net/@your_account" target="_blank" rel="noopener noreferrer">@your_account</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <p><button type="button" id="bgBtn">隨機換背景色</button></p>
+  <script>
+    document.getElementById('bgBtn').addEventListener('click', function () {
+      var hue = Math.floor(Math.random() * 360);
+      document.body.style.backgroundColor = 'hsl(' + hue + ', 70%, 85%)';
+    });
+  </script>
+</body></html>
