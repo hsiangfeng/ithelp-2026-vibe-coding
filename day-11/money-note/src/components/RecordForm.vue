@@ -5,15 +5,23 @@ import { today } from '../utils/format.js'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
+  // null 就是新增模式。不能寫 required，關閉的當下父層就會把它清成 null。
+  record: { type: Object, default: null },
 })
 
-const emit = defineEmits(['save', 'close'])
+const emit = defineEmits(['save', 'close', 'delete'])
 
 const amount = ref('')
 const category = ref('')
 const date = ref(today())
 const note = ref('')
 const amountInput = ref(null)
+
+// 開啟當下的快照，之後畫面完全不讀 props.record。
+// 直接寫 props.record ? '編輯' : '新增' 的話，關閉時父層立刻把 record 清成 null，
+// 而 bottom sheet 還要滑 0.25 秒 —— 使用者會看到標題閃回「新增」、刪除鈕同時消失。
+const isEditing = ref(false)
+const isConfirmingDelete = ref(false)
 
 // 金額只收正整數，所以在輸入的當下就把非數字濾掉，不要讓使用者打完才發現存不了。
 // 前導零去掉，但單獨一個 "0" 要留著 —— 讓存檔按鈕維持禁用，使用者才看得懂為什麼按不下去。
@@ -25,28 +33,41 @@ function onAmountInput(event) {
 // 不一起擋的話會存進 category 是空字串的記錄。
 const canSave = computed(() => Number(amount.value) > 0 && category.value !== '')
 
-// 每次開啟都重置，避免帶著上一筆的殘值。
+// 每次開啟都重設：有 record 就帶入原值，沒有就清空，避免帶著上一筆的殘值。
+// 只在開啟時跑，關閉時什麼都不做 —— 收合動畫期間畫面要凍在原樣。
 watch(
   () => props.open,
   async (isOpen) => {
     if (!isOpen) return
-    amount.value = ''
-    category.value = ''
-    date.value = today()
-    note.value = ''
+    const record = props.record
+    isEditing.value = Boolean(record)
+    // 不重設的話，展開確認後點遮罩關掉、再開別筆，會直接看到紅色的刪除鈕。
+    isConfirmingDelete.value = false
+    // 金額這條路徑上一律是字串（onAmountInput 產出的就是），帶入時也要轉。
+    amount.value = record ? String(record.amount) : ''
+    category.value = record?.category ?? ''
+    date.value = record?.date ?? today()
+    note.value = record?.note ?? ''
     await nextTick()
     amountInput.value?.focus()
   },
 )
 
+// 離場中的 sheet 還在 DOM 裡而且點得到，連點兩下會送出兩次。
+// props.open 在關閉的當下就是 false，不必等動畫，拿它當閘門最準。
 function onSubmit() {
-  if (!canSave.value) return
+  if (!props.open || !canSave.value) return
   emit('save', {
     amount: Number(amount.value),
     category: category.value,
     date: date.value,
     note: note.value.trim(),
   })
+}
+
+function onDelete() {
+  if (!props.open) return
+  emit('delete')
 }
 </script>
 
@@ -60,7 +81,7 @@ function onSubmit() {
         @submit.prevent="onSubmit"
       >
         <div class="mb-5 flex items-center justify-between">
-          <h2 class="text-base font-bold text-slate-800">新增</h2>
+          <h2 class="text-base font-bold text-slate-800">{{ isEditing ? '編輯' : '新增' }}</h2>
           <button
             type="button"
             class="-mr-2 px-2 py-1 text-sm text-slate-400"
@@ -133,6 +154,41 @@ function onSubmit() {
         >
           存檔
         </button>
+
+        <!--
+          二次確認就地展開，不用 window.confirm() —— 系統對話框在 iOS 上樣式突兀、
+          會強制收鍵盤並卡住 sheet 的收合動畫。就地確認讓拇指不用移動位置。
+          裡面每一顆都要寫 type="button"，在 <form> 裡預設是 submit，漏寫會變成按刪除卻存檔。
+        -->
+        <div v-if="isEditing" class="mt-3">
+          <button
+            v-if="!isConfirmingDelete"
+            type="button"
+            class="w-full py-3 text-sm text-red-500"
+            @click="isConfirmingDelete = true"
+          >
+            刪除這筆
+          </button>
+          <div v-else>
+            <p class="mb-2 text-center text-sm text-slate-500">確定要刪除這筆嗎？</p>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="flex-1 rounded-xl bg-slate-100 py-3 text-sm text-slate-600"
+                @click="isConfirmingDelete = false"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                class="flex-1 rounded-xl bg-red-500 py-3 text-sm font-medium text-white"
+                @click="onDelete"
+              >
+                刪除
+              </button>
+            </div>
+          </div>
+        </div>
       </form>
     </div>
   </Transition>

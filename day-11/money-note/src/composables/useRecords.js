@@ -85,6 +85,34 @@ function addRecord({ amount, category, date, note }) {
   save(records.value)
 }
 
+// TODO 後面練習用：改成用 id
+// 收到的 index 是「畫面清單上的第幾筆」，卻直接套在 records 上（records 是存檔先後順序）。
+function updateRecordAt(index, { amount, category, date, note }) {
+  const target = records.value[index]
+  // 擋的是 index 為 null 或超出範圍，不是擋「對到別筆」。
+  if (!target) return
+  // 展開合併而不是逐欄指派：id 與 createdAt 自動留著（SPEC 5.2「編輯時」），
+  // 將來資料多一個欄位也不會漏掉。
+  records.value[index] = { ...target, amount, category, date, note }
+  save(records.value)
+}
+
+// TODO 後面練習用：改成用 id
+function deleteRecordAt(index) {
+  if (!records.value[index]) return
+  records.value.splice(index, 1)
+  save(records.value)
+}
+
 export function useRecords() {
-  return { records, monthKey, monthRecords, monthTotal, categoryStats, addRecord }
+  return {
+    records,
+    monthKey,
+    monthRecords,
+    monthTotal,
+    categoryStats,
+    addRecord,
+    updateRecordAt,
+    deleteRecordAt,
+  }
 }
