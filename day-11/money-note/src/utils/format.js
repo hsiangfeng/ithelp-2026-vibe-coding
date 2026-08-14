@@ -25,8 +25,21 @@ export function today() {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
+// Date → YYYY-MM（當地時間）
+function monthKeyOf(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`
+}
+
 // 當地時間的本月，YYYY-MM
 export function currentMonthKey() {
-  const now = new Date()
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}`
+  return monthKeyOf(new Date())
+}
+
+// 月份加減：("2026-01", -1) → "2025-12"
+//
+// 跨年交給原生 Date 進位 —— 月份參數給 -1 或 12 它會自己往前後年推，
+// 不用另外判斷邊界。日固定給 1，避開「1/31 加一個月」溢位到 3 月那種老問題。
+export function shiftMonthKey(monthKey, delta) {
+  const [year, month] = monthKey.split('-').map(Number)
+  return monthKeyOf(new Date(year, month - 1 + delta, 1))
 }

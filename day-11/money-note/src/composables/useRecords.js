@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { CATEGORIES, getCategoryName } from '../constants/categories.js'
-import { currentMonthKey } from '../utils/format.js'
+import { currentMonthKey, shiftMonthKey } from '../utils/format.js'
 
 // 全專案唯一碰 localStorage 的地方。元件不直接讀寫，將來要換成 API 呼叫時只改這個檔。
 const STORAGE_KEY = 'money-note:records:v1'
@@ -42,6 +42,18 @@ const monthRecords = computed(() =>
 const monthTotal = computed(() =>
   monthRecords.value.reduce((sum, record) => sum + record.amount, 0),
 )
+
+// 「本月」依當地時間的今天判定，與 date 欄位的時區規則一致（都走 format.js）。
+const isCurrentMonth = computed(() => monthKey.value === currentMonthKey())
+
+// 切上／下個月。SPEC 5.1 明寫不限制可切到多久以前或以後，所以這裡不設上下限。
+function shiftMonth(delta) {
+  monthKey.value = shiftMonthKey(monthKey.value, delta)
+}
+
+function goToCurrentMonth() {
+  monthKey.value = currentMonthKey()
+}
 
 // 金額相同時的排序依據。SPEC 只寫「依金額由大到小」，沒說平手怎麼辦 ——
 // 不定規則的話順序會跟著記錄的輸入順序漂移，同一份資料重整前後可能換位。
@@ -111,6 +123,9 @@ export function useRecords() {
     monthRecords,
     monthTotal,
     categoryStats,
+    isCurrentMonth,
+    shiftMonth,
+    goToCurrentMonth,
     addRecord,
     updateRecordAt,
     deleteRecordAt,

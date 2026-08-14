@@ -1,16 +1,19 @@
 <script setup>
 import { computed, ref } from 'vue'
 import CategoryChart from './components/CategoryChart.vue'
+import MonthSwitcher from './components/MonthSwitcher.vue'
 import RecordForm from './components/RecordForm.vue'
 import RecordList from './components/RecordList.vue'
 import { useRecords } from './composables/useRecords.js'
-import { formatAmount } from './utils/format.js'
 
 const {
   monthKey,
   monthRecords,
   monthTotal,
   categoryStats,
+  isCurrentMonth,
+  shiftMonth,
+  goToCurrentMonth,
   addRecord,
   updateRecordAt,
   deleteRecordAt,
@@ -58,14 +61,14 @@ function onDelete() {
 
 <template>
   <div class="mx-auto flex min-h-dvh max-w-md flex-col bg-slate-50">
-    <!-- 月份切換（◀ ▶ 與「本月」按鈕）是「做」清單第 4、5 項，這次固定顯示本月。 -->
-    <header class="px-5 pt-10 pb-6">
-      <p class="text-sm tabular-nums text-slate-400">{{ monthKey }}</p>
-      <p class="mt-1 text-4xl font-bold tabular-nums text-slate-800">
-        {{ formatAmount(monthTotal) }}
-      </p>
-      <p class="mt-1.5 text-xs text-slate-400">本月支出</p>
-    </header>
+    <MonthSwitcher
+      :month-key="monthKey"
+      :total="monthTotal"
+      :is-current-month="isCurrentMonth"
+      @prev="shiftMonth(-1)"
+      @next="shiftMonth(1)"
+      @current="goToCurrentMonth"
+    />
 
     <!-- 分類佔比與流水清單共用同一個空狀態開關，不會只剩半張圖。 -->
     <main class="flex-1 space-y-2 pb-32">
