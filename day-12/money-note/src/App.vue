@@ -15,46 +15,45 @@ const {
   shiftMonth,
   goToCurrentMonth,
   addRecord,
-  updateRecordAt,
-  deleteRecordAt,
+  updateRecord,
+  deleteRecord,
 } = useRecords()
 
 const isFormOpen = ref(false)
-// TODO 後面練習用：改成用 id
-// null 代表新增模式，有數字就是「畫面清單上的第幾筆」。
-const editingIndex = ref(null)
+// null 代表新增模式，有值就是正在編輯的那筆記錄的 id。
+// 用 id 而不是畫面 index：清單是篩過、排過的，index 對不回儲存陣列。
+const editingId = ref(null)
 
 const editingRecord = computed(() =>
-  editingIndex.value === null ? null : (monthRecords.value[editingIndex.value] ?? null),
+  editingId.value === null
+    ? null
+    : (monthRecords.value.find((record) => record.id === editingId.value) ?? null),
 )
 
 function openCreate() {
-  editingIndex.value = null
+  editingId.value = null
   isFormOpen.value = true
 }
 
-// TODO 後面練習用：改成用 id
-function openEdit(index) {
-  editingIndex.value = index
+function openEdit(id) {
+  editingId.value = id
   isFormOpen.value = true
 }
 
 function closeForm() {
   isFormOpen.value = false
-  editingIndex.value = null
+  editingId.value = null
 }
 
 function onSave(payload) {
-  // TODO 後面練習用：改成用 id
-  if (editingIndex.value === null) addRecord(payload)
-  else updateRecordAt(editingIndex.value, payload)
+  if (editingId.value === null) addRecord(payload)
+  else updateRecord(editingId.value, payload)
   closeForm()
 }
 
 function onDelete() {
-  if (editingIndex.value === null) return
-  // TODO 後面練習用：改成用 id
-  deleteRecordAt(editingIndex.value)
+  if (editingId.value === null) return
+  deleteRecord(editingId.value)
   closeForm()
 }
 </script>
