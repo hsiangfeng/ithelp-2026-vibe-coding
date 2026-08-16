@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Money Note —— 單人使用的記帳工具。純前端，沒有後端、沒有登入，資料只存在瀏覽器的 `localStorage`。
 
-**目前狀態：只有腳手架，功能尚未實作。** `src/constants/`、`src/composables/`、`src/components/` 都是空目錄，`App.vue` 是暫時的環境確認畫面。
+**目前狀態：SPEC 第 3 節「做」的項目都已實作。** 記帳頁（月份切換、總額、流水清單、新增／編輯／刪除）與統計頁（總支出、記帳筆數、分類佔比圓餅圖）兩個分頁都在。
 
 ## 語言
 
@@ -25,7 +25,7 @@ npm run build          # 產出 dist/
 npm run preview        # 預覽 build 結果
 ```
 
-**沒有安裝測試框架。** 驗證方式是手動走一遍 SPEC.md 第 7 節那九條驗收條件 —— 它們涵蓋了 CRUD、統計同步、跨月搬移、空狀態、重整後資料留存。新增功能後請照著走，不要只看畫面有沒有壞。
+**沒有安裝測試框架。** 驗證方式是手動走一遍 SPEC.md 第 7 節那十一條驗收條件 —— 它們涵蓋了 CRUD、統計同步、跨月搬移、空狀態、重整後資料留存、分頁切換。新增功能後請照著走，不要只看畫面有沒有壞。
 
 ## 開發流程
 
@@ -49,7 +49,7 @@ npm run preview        # 預覽 build 結果
 
 ```
 月份切換：加入回到本月按鈕
-分類佔比：改用純 CSS 橫條呈現
+分類佔比：改用圓餅圖呈現
 記錄表單：金額為空或 0 時停用存檔按鈕
 資料層：localStorage 解析失敗時回傳空陣列
 ```
@@ -61,7 +61,7 @@ npm run preview        # 預覽 build 結果
 動手前先讀 [SPEC.md](./SPEC.md)。它不只是需求描述，還帶著已經拍板的決策：
 
 - **第 3 節的「不做」清單是刻意排除，不是還沒做。** 收入、帳戶、預算、跨月趨勢、分類管理介面 —— 想加之前先問，不要自己補上去。
-- **第 7 節的九條驗收條件就是「完成」的定義。**
+- **第 7 節的十一條驗收條件就是「完成」的定義。**
 - **第 10 節是決策紀錄表。** 任何範圍或技術上的改變，補一列進去（日期 / 決策 / 理由），不要只改內文 —— 這張表的用途是避免日後重新爭論同一件事。
 
 技術選型的完整比較在 [TECH_CHOICE.md](./TECH_CHOICE.md)（為什麼是 Vue 而不是純 HTML 或 React、部署選擇、iOS Safari 七天清 localStorage 的風險）。
@@ -80,15 +80,17 @@ npm run preview        # 預覽 build 結果
 
 - **`src/composables/useRecords.js` 是唯一碰 `localStorage` 的地方。** 元件不直接讀寫。這是為了將來要換成 API 呼叫時元件不用動。
 - localStorage key 是 `money-note:records:v1`，整個陣列序列化成一個 JSON 字串。**`JSON.parse` 失敗時視為空陣列，不要讓整個 app 掛掉。** key 尾巴的 `v1` 是留給將來資料結構改動時做遷移判斷用的。
+- **`src/utils/stats.js` 是統計計算的所在地，一律寫成純函式。** 吃一個記錄陣列、回傳結果，不碰 `localStorage`、不碰 Vue 的 `ref`。要算哪一段（哪個月）是 `useRecords.js` 的事，怎麼算是這個檔的事 —— 不要因為「順手」就把新的統計寫回 `useRecords.js` 的 computed 裡。
 - **以下套件是刻意不裝的，不要因為「方便」就補上：**
 
   | 不裝 | 替代做法 |
   |---|---|
-  | Vue Router | 只有一頁，表單用 bottom sheet |
+  | Vue Router | 只有兩個分頁，用一個 `ref` 切換；表單用 bottom sheet |
   | Pinia | 一個 composable 就夠 |
-  | 圖表函式庫 | 分類佔比用 CSS `width` 百分比 |
   | day.js 等日期函式庫 | 只做「取月份」和「格式化」，原生 `Date` 足夠 |
 
+- **圖表用 Chart.js + vue-chartjs**（2026-08-16 翻掉原本「不裝圖表函式庫」的決定，見 SPEC 第 10 節）。只註冊 `ArcElement`，Tooltip 與 Legend 刻意不註冊 —— 資料全在圓餅圖旁的文字明細裡。
+- **canvas 讀不出來也選不起來。** 圖表一律要有等價的文字呈現（名稱、金額、百分比），canvas 本身標 `aria-hidden`。不要做出「只能靠顏色分辨」的畫面。
 - 元件一律用 `<script setup>` Composition API。
 
 ## 樣式

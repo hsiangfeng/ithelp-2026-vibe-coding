@@ -1,7 +1,7 @@
 <script setup>
 import { formatAmount } from '../utils/format.js'
 
-// 月份切換 + 該月總額。跟 RecordList、CategoryChart 一樣只收 props、不碰資料層，
+// 月份切換 + 該月總額。跟 RecordList、StatsPanel 一樣只收 props、不碰資料層，
 // 要切到哪一個月是 useRecords 的事，這裡只負責發出「往前」「往後」「回本月」。
 defineProps({
   monthKey: { type: String, required: true },

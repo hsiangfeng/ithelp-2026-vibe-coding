@@ -27,26 +27,31 @@ npm run dev -- --host
 | 框架 | Vue 3（`<script setup>` Composition API） |
 | 建置 | Vite |
 | 樣式 | Tailwind CSS v4（`@tailwindcss/vite` plugin） |
-| 路由 / 狀態管理 / 圖表 / 日期函式庫 | 都不裝，見 SPEC 第 6 節 |
+| 圖表 | Chart.js + vue-chartjs（只用統計頁的圓餅圖） |
+| 路由 / 狀態管理 / 日期函式庫 | 都不裝，見 SPEC 第 6 節 |
 
 ## 目錄結構
 
 ```
 src/
-├─ App.vue                    # 版面組裝
+├─ App.vue                    # 版面組裝、分頁切換
 ├─ main.js
 ├─ style.css                  # 只有 @import "tailwindcss"
 ├─ constants/
-│  └─ categories.js           # 分類清單（唯一真實來源）
+│  └─ categories.js           # 分類清單（唯一真實來源），含圓餅圖用的顏色
 ├─ composables/
-│  └─ useRecords.js           # 讀寫 localStorage、CRUD、月份篩選、統計
+│  └─ useRecords.js           # 讀寫 localStorage、CRUD、月份篩選
+├─ utils/
+│  ├─ format.js               # 金額與日期格式化、「今天」「本月」的取值
+│  └─ stats.js                # 統計計算（純函式）
 └─ components/
-   ├─ MonthSwitcher.vue       # 月份切換 + 本月總額
-   ├─ CategoryChart.vue       # 分類佔比橫條
+   ├─ MonthSwitcher.vue       # 月份切換 + 該月總額
    ├─ RecordList.vue          # 流水清單
-   └─ RecordForm.vue          # 新增 / 編輯 bottom sheet
+   ├─ RecordForm.vue          # 新增 / 編輯 bottom sheet
+   ├─ TabBar.vue              # 底部分頁
+   ├─ StatsPanel.vue          # 統計頁內容
+   └─ CategoryPieChart.vue    # 分類佔比圓餅圖 + 文字明細
 ```
 
 `useRecords.js` 是唯一碰 `localStorage` 的地方，元件不直接讀寫。
-
-> 目前 `constants/`、`composables/`、`components/` 是空目錄，功能尚未實作。
+`stats.js` 只放純函式，不碰 `localStorage` 也不碰 Vue 的 `ref`。

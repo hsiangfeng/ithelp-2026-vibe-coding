@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
-import { CATEGORIES, getCategoryName } from '../constants/categories.js'
 import { currentMonthKey, shiftMonthKey } from '../utils/format.js'
+import { buildCategoryStats, sumAmount } from '../utils/stats.js'
 
 // 全專案唯一碰 localStorage 的地方。元件不直接讀寫，將來要換成 API 呼叫時只改這個檔。
 const STORAGE_KEY = 'money-note:records:v1'
@@ -39,9 +39,11 @@ const monthRecords = computed(() =>
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
 )
 
-const monthTotal = computed(() =>
-  monthRecords.value.reduce((sum, record) => sum + record.amount, 0),
-)
+// 統計的算法都在 utils/stats.js，這裡只負責把「該月的記錄」餵進去、包成 computed。
+// 資料怎麼存、要算哪一段是這個檔的事；怎麼算是那個檔的事。
+const monthTotal = computed(() => sumAmount(monthRecords.value))
+
+const monthCount = computed(() => monthRecords.value.length)
 
 // 「本月」依當地時間的今天判定，與 date 欄位的時區規則一致（都走 format.js）。
 const isCurrentMonth = computed(() => monthKey.value === currentMonthKey())
@@ -55,35 +57,7 @@ function goToCurrentMonth() {
   monthKey.value = currentMonthKey()
 }
 
-// 金額相同時的排序依據。SPEC 只寫「依金額由大到小」，沒說平手怎麼辦 ——
-// 不定規則的話順序會跟著記錄的輸入順序漂移，同一份資料重整前後可能換位。
-const CATEGORY_ORDER = new Map(CATEGORIES.map((category, index) => [category.id, index]))
-const orderOf = (id) => CATEGORY_ORDER.get(id) ?? CATEGORIES.length
-
-// 該月各分類的金額與佔比，已排序、已算好百分比，元件直接畫就好。
-//
-// 從記錄反推分類，不是拿 CATEGORIES 去對記錄 —— 該月沒花到的分類根本不會進 Map，
-// 自然不會列出一排 0。順帶讓萬一對不到 CATEGORIES 的舊 id 也還是算得進去，
-// 橫條加起來才不會跟本月總額對不上。
-const categoryStats = computed(() => {
-  const total = monthTotal.value
-  if (total === 0) return []
-
-  const sums = new Map()
-  for (const record of monthRecords.value) {
-    sums.set(record.category, (sums.get(record.category) ?? 0) + record.amount)
-  }
-
-  return [...sums]
-    .map(([id, amount]) => ({
-      id,
-      name: getCategoryName(id),
-      amount,
-      // 四捨五入到整數，加起來不見得剛好 100%，這是 SPEC 允許的，不要另外補償。
-      percent: Math.round((amount / total) * 100),
-    }))
-    .sort((a, b) => b.amount - a.amount || orderOf(a.id) - orderOf(b.id))
-})
+const categoryStats = computed(() => buildCategoryStats(monthRecords.value))
 
 function addRecord({ amount, category, date, note }) {
   records.value.push({
@@ -121,6 +95,7 @@ export function useRecords() {
     monthKey,
     monthRecords,
     monthTotal,
+    monthCount,
     categoryStats,
     isCurrentMonth,
     shiftMonth,
