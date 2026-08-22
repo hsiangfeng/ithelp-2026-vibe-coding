@@ -39,7 +39,13 @@ const emit = defineEmits(['prev', 'next', 'current'])
         <span>共 <span class="tabular-nums">{{ count }}</span> 筆</span>
       </p>
 
-      <p class="mt-2 font-mono text-[2.5rem] leading-none font-bold tabular-nums text-clay">
+      <!--
+        整頁最重要的一個數字，所以字級給到能放的最大。
+        375px 扣掉左右內距剩 343px，text-5xl 的等寬字每字約 31px ——
+        八位數的 $12,345,678（含錢字號與逗號共 11 字）剛好貼齊，再大就會撐出水平捲動。
+        個人記帳的月總額不會到這個量級，但要再放大就得先確認這條線。
+      -->
+      <p class="mt-2 font-mono text-5xl leading-none font-bold tabular-nums text-clay md:text-6xl">
         {{ formatAmount(total) }}
       </p>
 

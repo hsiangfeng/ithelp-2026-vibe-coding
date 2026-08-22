@@ -172,10 +172,15 @@ function onSubmit() {
       裡面每一顆都要寫 type="button"，在 <form> 裡預設是 submit，漏寫會變成按刪除卻存檔。
     -->
     <div v-if="isEditing" class="mt-3 border-t border-rule pt-3">
+      <!--
+        這顆只是入口，按下去還有一道確認才會真的刪，所以平常維持次要文字的灰
+        —— 常駐的紅字會變成整頁最吵的東西。碰到才轉成警告紅。
+        觸控沒有 hover，補一個 active 讓手機按下去也有同樣的回饋。
+      -->
       <button
         v-if="!isConfirmingDelete"
         type="button"
-        class="min-h-11 w-full rounded-sm text-sm text-alert"
+        class="min-h-11 w-full rounded-sm text-sm text-ink-soft transition-colors hover:text-alert focus-visible:text-alert active:text-alert"
         @click="isConfirmingDelete = true"
       >
         刪除這筆
