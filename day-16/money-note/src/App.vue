@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref } from 'vue'
-import MonthSwitcher from './components/MonthSwitcher.vue'
+import { computed, nextTick, ref, watch } from 'vue'
+import AppHeader from './components/AppHeader.vue'
 import RecordForm from './components/RecordForm.vue'
 import RecordList from './components/RecordList.vue'
 import StatsPanel from './components/StatsPanel.vue'
@@ -22,13 +22,18 @@ const {
 } = useRecords()
 
 // 目前在哪一個分頁。純粹的畫面狀態，不進 useRecords（那裡只管資料）。
-// 月份切換列在兩個分頁之上、不隨分頁重置，切到三月看記帳、切過去統計也還是三月。
+// 標題與摘要在兩個分頁之上、不隨分頁重置，切到三月看記帳、切過去統計也還是三月。
 const activeTab = ref('records')
 
-const isFormOpen = ref(false)
 // null 代表新增模式，有值就是正在編輯的那筆記錄的 id。
 // 用 id 而不是畫面 index：清單是篩過、排過的，index 對不回儲存陣列。
 const editingId = ref(null)
+
+// 每存一次檔就 +1。新增模式下 editingId 存檔前後都是 null，
+// 表單光看 record 認不出「又存了一筆」，要靠這個訊號才會清空重來。
+const formResetKey = ref(0)
+
+const formSection = ref(null)
 
 const editingRecord = computed(() =>
   editingId.value === null
@@ -36,89 +41,104 @@ const editingRecord = computed(() =>
     : (monthRecords.value.find((record) => record.id === editingId.value) ?? null),
 )
 
-function openCreate() {
+// 切月份就退出編輯 —— 那一筆已經不在畫面上的清單裡，表單還停在編輯模式會對不上。
+watch(monthKey, () => {
   editingId.value = null
-  isFormOpen.value = true
-}
+})
 
-function openEdit(id) {
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+async function openEdit(id) {
   editingId.value = id
-  isFormOpen.value = true
+  // 表單在清單上方，捲過去使用者才看得到自己正在改哪一筆。
+  await nextTick()
+  formSection.value?.scrollIntoView({
+    behavior: reducedMotion.matches ? 'auto' : 'smooth',
+    block: 'start',
+  })
 }
 
-function closeForm() {
-  isFormOpen.value = false
+function cancelEdit() {
   editingId.value = null
 }
 
 function onSave(payload) {
-  if (editingId.value === null) addRecord(payload)
-  else updateRecord(editingId.value, payload)
-  closeForm()
+  if (editingId.value === null) {
+    addRecord(payload)
+  } else {
+    updateRecord(editingId.value, payload)
+    editingId.value = null
+  }
+  formResetKey.value += 1
 }
 
 function onDelete() {
   if (editingId.value === null) return
   deleteRecord(editingId.value)
-  closeForm()
+  editingId.value = null
+  formResetKey.value += 1
 }
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-dvh max-w-md flex-col bg-slate-50">
-    <MonthSwitcher
+  <!--
+    紙頁本身：手機滿版、桌機置中限寬 780px，不另外設計桌機版面。
+    底色由 body 給，這裡只管欄寬與內距。
+  -->
+  <div
+    class="mx-auto min-h-dvh w-full max-w-[780px] px-4 pb-[calc(4rem+env(safe-area-inset-bottom))] md:px-8"
+  >
+    <AppHeader
       :month-key="monthKey"
       :total="monthTotal"
+      :count="monthCount"
       :is-current-month="isCurrentMonth"
       @prev="shiftMonth(-1)"
       @next="shiftMonth(1)"
       @current="goToCurrentMonth"
     />
 
-    <!-- pb 要留得下底部分頁列加浮動按鈕，否則最後一筆記錄會被蓋住。 -->
-    <main class="flex-1 pb-40">
-      <template v-if="activeTab === 'records'">
-        <RecordList v-if="monthRecords.length" :records="monthRecords" @select="openEdit" />
-        <div v-else class="flex flex-col items-center gap-2 px-6 py-24 text-center">
-          <p class="text-sm text-slate-500">這個月還沒有任何記錄</p>
-          <p class="text-xs text-slate-400">按右下角的 ＋ 記下第一筆支出</p>
-        </div>
-      </template>
-
-      <StatsPanel
-        v-else
-        :total="monthTotal"
-        :count="monthCount"
-        :stats="categoryStats"
-        :is-current-month="isCurrentMonth"
-      />
-    </main>
-
-    <!-- 外層跟著內容欄置中，桌機上按鈕才不會飛到螢幕最右邊。 -->
-    <div class="pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto h-0 max-w-md">
-      <!--
-        只在記帳頁出現：統計頁按 ＋ 記完帳，畫面停在統計頁上會讓人以為沒存進去。
-        bottom 要墊過底部分頁列的高度，不然按鈕會壓在「記帳／統計」上面。
-      -->
-      <button
-        v-if="activeTab === 'records'"
-        type="button"
-        class="pointer-events-auto absolute right-5 bottom-[calc(5rem+env(safe-area-inset-bottom))] flex h-14 w-14 items-center justify-center rounded-full bg-slate-800 text-3xl leading-none text-white shadow-lg"
-        aria-label="新增一筆支出"
-        @click="openCreate"
-      >
-        ＋
-      </button>
+    <div class="mt-6">
+      <TabBar :active="activeTab" @change="activeTab = $event" />
     </div>
 
-    <TabBar :active="activeTab" @change="activeTab = $event" />
+    <main class="mt-6">
+      <!-- v-show 不是 v-if：切去統計頁再切回來，表單裡打到一半的內容要還在。 -->
+      <div v-show="activeTab === 'records'" class="space-y-8">
+        <section ref="formSection" class="scroll-mt-4">
+          <RecordForm
+            :record="editingRecord"
+            :reset-key="formResetKey"
+            @save="onSave"
+            @delete="onDelete"
+            @cancel-edit="cancelEdit"
+          />
+        </section>
 
-    <RecordForm
-      :open="isFormOpen"
-      :record="editingRecord"
-      @save="onSave"
-      @delete="onDelete"
-      @close="closeForm"
-    />
+        <section>
+          <h2 class="font-title text-base">支出明細</h2>
+
+          <RecordList
+            v-if="monthRecords.length"
+            class="mt-3"
+            :records="monthRecords"
+            :editing-id="editingId"
+            @select="openEdit"
+          />
+          <p
+            v-else
+            class="mt-3 rounded-sm border border-rule bg-card px-6 py-14 text-center text-sm text-ink-soft"
+          >
+            這個月還沒有記錄，用上面的表單記下第一筆支出。
+          </p>
+        </section>
+      </div>
+
+      <!--
+        統計頁用 v-if：圓餅圖在 display: none 的容器裡量不到寬高，
+        用 v-show 藏起來再切回去，Chart.js 有機會算出 0 尺寸。
+      -->
+      <StatsPanel v-if="activeTab === 'stats'" :stats="categoryStats" />
+    </main>
   </div>
 </template>

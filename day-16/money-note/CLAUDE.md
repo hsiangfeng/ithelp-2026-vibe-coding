@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Money Note —— 單人使用的記帳工具。純前端，沒有後端、沒有登入，資料只存在瀏覽器的 `localStorage`。
 
-**目前狀態：SPEC 第 3 節「做」的項目都已實作。** 記帳頁（月份切換、總額、流水清單、新增／編輯／刪除）與統計頁（總支出、記帳筆數、分類佔比圓餅圖）兩個分頁都在。
+**目前狀態：SPEC 第 3 節「做」的項目都已實作。** 記帳頁（月份切換、總額、流水清單、新增／編輯／刪除）與統計頁（分類佔比圓餅圖）兩個分頁都在，總支出與記帳筆數在兩頁共用的摘要區。
+
+視覺方向是**暖色紙本帳冊**：紙底墨字、帳冊欄位線、合計雙底線，數字優先。不做藍白後台，不用漸層、玻璃效果、emoji 圖示或浮誇陰影。
 
 ## 語言
 
@@ -85,7 +87,7 @@ npm run preview        # 預覽 build 結果
 
   | 不裝 | 替代做法 |
   |---|---|
-  | Vue Router | 只有兩個分頁，用一個 `ref` 切換；表單用 bottom sheet |
+  | Vue Router | 只有兩個分頁，用一個 `ref` 切換；表單常駐在記帳頁上 |
   | Pinia | 一個 composable 就夠 |
   | day.js 等日期函式庫 | 只做「取月份」和「格式化」，原生 `Date` 足夠 |
 
@@ -95,11 +97,40 @@ npm run preview        # 預覽 build 結果
 
 ## 樣式
 
-Tailwind CSS **v4**，走 `@tailwindcss/vite` plugin。`src/style.css` 裡只有一行 `@import "tailwindcss";`。
+Tailwind CSS **v4**，走 `@tailwindcss/vite` plugin。
 
-**沒有 `tailwind.config.js`，也沒有 postcss 設定 —— 不要去建。** v4 的設定改成寫在 CSS 裡（`@theme`），需要自訂 token 時用那個。
+**沒有 `tailwind.config.js`，也沒有 postcss 設定 —— 不要去建。** v4 的設定寫在 CSS 裡，全部收在 `src/style.css` 的 `@theme` 區塊。
 
-版面以 375px（iPhone SE）為設計基準，手機優先。桌機只要內容置中、限制最大寬度即可，不另外設計桌機版面。
+### 色票（一律用 token，不要在元件裡寫 hex）
+
+| Token | 值 | 用途 |
+|---|---|---|
+| `paper` | `#F3EFE7` | 頁面背景 |
+| `card` | `#FFFDF8` | 卡片、表單、明細底 |
+| `ink` | `#1F2925` | 主要文字、合計雙線 |
+| `ink-soft` | `#56625C` | 次要文字、欄頭、標籤 |
+| `ledger` | `#245C4A` | 主要動作：存檔、已選分類、目前分頁、focus ring |
+| `clay` | `#9A4F20` | 重點：本月總支出那個數字 |
+| `alert` | `#962E2E` | **只給刪除**，不做他用 |
+| `rule` / `rule-soft` | `#DCD5C8` / `#EBE5DA` | 帳冊線 / 明細列分隔線 |
+
+帳冊線用實色不用透明度疊色 —— 半透明的墨疊在紙上與疊在卡片上會變成兩種灰，金額欄那條直線跨過卡片邊界時就接不起來。
+
+分類的六個 `color` 也從同一組墨水裡調（見 `constants/categories.js`），圓餅圖不引進外來色相。
+
+### 字型
+
+`font-title`（系統明體）只給標題用，`font-sans`（系統黑體）排內文，**所有金額一律 `font-mono` 加 `tabular-nums`** —— 字寬固定，明細的金額欄才對得成一直排。**不載入任何遠端字型。**
+
+### 版面與無障礙下限
+
+- 375px（iPhone SE）為設計基準，手機優先，**不得出現水平捲動**
+- 768px 以上內容置中、最大寬 780px，不另外設計桌機版面
+- 所有 `input`、`button` 至少 44px 高（`min-h-11`）
+- 每個輸入欄位都有可見標籤；分類按鈕組用 `<fieldset>` + `<legend>`
+- focus ring 只定義在 `style.css` 的 `:focus-visible` 一處，不要在元件裡各寫一套
+- `prefers-reduced-motion` 由 `style.css` 的全域區塊處理；**圓餅圖畫在 canvas 上，CSS 管不到**，`CategoryPieChart.vue` 另外讀 `matchMedia`
+- 不用漸層、玻璃效果、emoji 功能圖示、浮誇陰影 —— 層級靠線條粗細與紙／卡兩層底色差
 
 ## 部署
 

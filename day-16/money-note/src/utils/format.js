@@ -19,6 +19,13 @@ export function formatMonthDay(date) {
   return `${date.slice(5, 7)}/${date.slice(8, 10)}`
 }
 
+// "2026-08" → "2026 年 8 月"
+// 月份去掉前導零：帳冊上寫的是「8 月」不是「08 月」。
+// 一樣直接切字串，理由同 formatMonthDay。
+export function formatMonthLabel(monthKey) {
+  return `${monthKey.slice(0, 4)} 年 ${Number(monthKey.slice(5, 7))} 月`
+}
+
 // 當地時間的今天，YYYY-MM-DD
 export function today() {
   const now = new Date()
